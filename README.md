@@ -17,8 +17,6 @@
 pip install bitpanda-aio
 ```
 
-Alternatively you can download `bitpanda-aio` by cloning this GitHub repository, install requirements from `requirements.txt` and setting `PYTHONPATH` variable accordingly.
-
 ### Prerequisites
 
 Due to dependencies and Python features used by the library please make sure you use Python 3.7.
@@ -176,4 +174,4 @@ If you feel you want to get in touch, then please
 
 ### Affiliation
 
-In case you are interested in an automated trading bot that will utilize `bitpanda-aio` in the near future, then please visit my other project [creten](https://github.com/nardew/creten).
+In case you are interested in an automated trading bot that will utilize `bitpanda-aio` in the near future, then feel free to visit my other project [creten](https://github.com/nardew/creten).
