@@ -7,13 +7,16 @@ import os
 from bitpanda.BitpandaClient import BitpandaClient
 from bitpanda.Pair import Pair
 from bitpanda.websockets import CandlesticksSubscriptionParams
-from bitpanda.enums import OrderSide
+from bitpanda.enums import OrderSide, TimeUnit
 
 logger = logging.getLogger("bitpanda")
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
 print(f"Available loggers: {[name for name in logging.root.manager.loggerDict]}\n")
+
+async def order_book_update(response : dict) -> None:
+	print(f"Callback {order_book_update.__name__}: [{response}]")
 
 async def run():
 	print("STARTING BITPANDA CLIENT\n")
@@ -42,16 +45,16 @@ async def run():
 	await client.get_account_order("1")
 
 	print("\nCreate market order:")
-	await client.create_account_order_market("BTC", "EUR", OrderSide.BUY, "1")
+	await client.create_account_order_market(Pair("BTC", "EUR"), OrderSide.BUY, "1")
 
 	print("\nCreate limit order:")
-	await client.create_account_order_limit("BTC", "EUR", OrderSide.BUY, "10", "10")
+	await client.create_account_order_limit(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10")
 
 	print("\nCreate stop loss order:")
-	await client.create_account_order_stop_limit("BTC", "EUR", OrderSide.BUY, "10", "10", "10")
+	await client.create_account_order_stop_limit(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10", "10")
 
 	print("\nDelete orders:")
-	await client.delete_account_orders("BTC", "EUR")
+	await client.delete_account_orders(Pair("BTC", "EUR"))
 
 	print("\nDelete order:")
 	await client.delete_account_order("1")
@@ -72,7 +75,7 @@ async def run():
 	await client.get_currencies()
 
 	print("\nCandlesticks:")
-	await client.get_candlesticks("BTC", "EUR", "DAYS", "1", datetime.datetime.now() - datetime.timedelta(days=7), datetime.datetime.now())
+	await client.get_candlesticks(Pair("BTC", "EUR"), TimeUnit.DAYS, "1", datetime.datetime.now() - datetime.timedelta(days=7), datetime.datetime.now())
 
 	print("\nFees:")
 	await client.get_account_fees()
@@ -81,7 +84,7 @@ async def run():
 	await client.get_instruments()
 
 	print("\nOrder book:")
-	await client.get_order_book("BTC", "EUR")
+	await client.get_order_book(Pair("BTC", "EUR"))
 
 	print("\nTime:")
 	await client.get_time()
@@ -89,9 +92,9 @@ async def run():
 	# Websockets
 	print("\nWEBSOCKETS\n")
 	client.subscribe_prices_ws([Pair("BTC", "EUR")])
-	client.subscribe_order_book_ws([Pair("BTC", "EUR")], 50)
+	client.subscribe_order_book_ws([Pair("BTC", "EUR")], 50, callbacks = [order_book_update])
 	client.subscribe_account_ws()
-	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), "MINUTES", 1)])
+	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
 	client.subscribe_market_ticker_ws([Pair("BTC", "EUR")])
 
 	await client.start_websockets()

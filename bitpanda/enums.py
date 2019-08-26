@@ -8,3 +8,10 @@ class RestCallType(enum.Enum):
 class OrderSide(enum.Enum):
 	BUY = "BUY"
 	SELL = "SELL"
+
+class TimeUnit(enum.Enum):
+	MINUTES = "MINUTES"
+	HOURS = "HOURS"
+	DAYS = "DAYS"
+	WEEKS = "WEEKS"
+	MONTHS = "MONTHS"
