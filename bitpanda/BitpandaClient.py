@@ -95,7 +95,7 @@ class BitpandaClient(object):
 	async def get_account_trading_volume(self) -> dict:
 		return await self._create_get("account/trading-volume", headers = self._get_header_api_key())
 
-	async def create_account_order_market(self, pair : Pair, side : enums.OrderSide, amount : str) -> dict:
+	async def create_market_order(self, pair : Pair, side : enums.OrderSide, amount : str) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,
@@ -105,7 +105,7 @@ class BitpandaClient(object):
 
 		return await self._create_post("account/orders", data = data, headers = self._get_header_api_key())
 
-	async def create_account_order_limit(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str) -> dict:
+	async def create_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,
@@ -116,7 +116,7 @@ class BitpandaClient(object):
 
 		return await self._create_post("account/orders", data = data, headers = self._get_header_api_key())
 
-	async def create_account_order_stop_limit(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str, stop_price : str) -> dict:
+	async def create_stop_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str, stop_price : str) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,

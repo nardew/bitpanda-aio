@@ -45,13 +45,13 @@ async def run():
 	await client.get_account_order("1")
 
 	print("\nCreate market order:")
-	await client.create_account_order_market(Pair("BTC", "EUR"), OrderSide.BUY, "1")
+	await client.create_market_order(Pair("BTC", "EUR"), OrderSide.BUY, "1")
 
 	print("\nCreate limit order:")
-	await client.create_account_order_limit(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10")
+	await client.create_limit_order(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10")
 
 	print("\nCreate stop loss order:")
-	await client.create_account_order_stop_limit(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10", "10")
+	await client.create_stop_limit_order(Pair("BTC", "EUR"), OrderSide.BUY, "10", "10", "10")
 
 	print("\nDelete orders:")
 	await client.delete_account_orders(Pair("BTC", "EUR"))
@@ -92,7 +92,7 @@ async def run():
 	# Websockets
 	print("\nWEBSOCKETS\n")
 	client.subscribe_prices_ws([Pair("BTC", "EUR")])
-	client.subscribe_order_book_ws([Pair("BTC", "EUR")], 50, callbacks = [order_book_update])
+	client.subscribe_order_book_ws([Pair("BTC", "EUR")], "50", callbacks = [order_book_update])
 	client.subscribe_account_ws()
 	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
 	client.subscribe_market_ticker_ws([Pair("BTC", "EUR")])
