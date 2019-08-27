@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
 ```
 
-All examples are available in `client-example/client.py`.
+All examples can be found in `client-example/client.py` which is available in the GitHub repository.
 
 ### Support
 

@@ -7,8 +7,8 @@ import pytz
 from typing import List, Callable, Any
 
 from bitpanda.Pair import Pair
-from bitpanda.websockets import Websocket, PriceWebsocket, OrderbookWebsocket, AccountWebsocket, CandlesticksWebsocket, \
-	MarketTickerWebsocket, CandlesticksSubscriptionParams
+from bitpanda.subscriptions import Subscription, SubscriptionMgr, PricesSubscription, OrderbookSubscription, AccountSubscription, CandlesticksSubscription, \
+	MarketTickerSubscription, CandlesticksSubscriptionParams
 from bitpanda import enums
 
 logger = logging.getLogger(__name__)
@@ -22,10 +22,14 @@ class BitpandaClient(object):
 
 		self.rest_session = None
 
+
+
 		self.ws_subscriptions = []
 
 		self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 		self.ssl_context.load_verify_locations(certificate_path)
+
+		self.subscription_manager = SubscriptionMgr(self.ssl_context)
 
 	async def get_currencies(self) -> dict:
 		return await self._create_get("currencies")
@@ -161,22 +165,24 @@ class BitpandaClient(object):
 	async def get_time(self) -> dict:
 		return await self._create_get("time")
 
-	def subscribe_prices_ws(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self._subscribe_ws(PriceWebsocket(pairs, callbacks, self.ssl_context))
+	def subscribe_prices(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
+		self.subscription_manager.add_subscription(PricesSubscription(pairs, callbacks))
 
-	def subscribe_order_book_ws(self, pairs : List[Pair], depth : str, callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self._subscribe_ws(OrderbookWebsocket(pairs, depth, callbacks, self.ssl_context))
+	def subscribe_order_book(self, pairs : List[Pair], depth : str, callbacks : List[Callable[[dict], Any]] = None) -> None:
+		self.subscription_manager.add_subscription(OrderbookSubscription(pairs, depth, callbacks))
 
-	def subscribe_account_ws(self, callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self._subscribe_ws(AccountWebsocket(self.api_key, callbacks, self.ssl_context))
+	def subscribe_account(self, callbacks : List[Callable[[dict], Any]] = None) -> None:
+		self.subscription_manager.add_subscription(AccountSubscription(self.api_key, callbacks))
 
-	def subscribe_candlesticks_ws(self, subscription_params : List[CandlesticksSubscriptionParams], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self._subscribe_ws(CandlesticksWebsocket(subscription_params, callbacks, self.ssl_context))
+	def subscribe_candlesticks(self, subscription_params : List[CandlesticksSubscriptionParams], callbacks : List[Callable[[dict], Any]] = None) -> None:
+		self.subscription_manager.add_subscription(CandlesticksSubscription(subscription_params, callbacks))
 
-	def subscribe_market_ticker_ws(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self._subscribe_ws(MarketTickerWebsocket(pairs, callbacks, self.ssl_context))
+	def subscribe_market_ticker(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
+		self.subscription_manager.add_subscription(MarketTickerSubscription(pairs, callbacks))
 
-	async def start_websockets(self) -> None:
+	async def start_subscriptions(self) -> None:
+		await self.subscription_manager.run()
+		'''
 		if len(self.ws_subscriptions):
 			done, pending = await asyncio.wait([asyncio.create_task(ws_subscription.run()) for ws_subscription in self.ws_subscriptions], return_when = asyncio.FIRST_EXCEPTION)
 			for task in done:
@@ -188,6 +194,12 @@ class BitpandaClient(object):
 					for task in pending:
 						if not task.cancelled():
 							task.cancel()
+		'''
+
+	async def close(self) -> None:
+		session = self._get_rest_session()
+		if session is not None:
+			await session.close()
 
 	async def _create_get(self, resource : str, params : dict = None, headers : dict = None) -> dict:
 		return await self._create_rest_call(enums.RestCallType.GET, resource, None, params, headers)
@@ -220,19 +232,6 @@ class BitpandaClient(object):
 				"response": response_text
 			}
 
-	def _is_ws_already_subscribed(self, ws : Websocket) -> bool:
-		for ws_subscription in self.ws_subscriptions:
-			if ws_subscription.get_websocket_id() == ws.get_websocket_id():
-				return True
-
-		return False
-
-	def _subscribe_ws(self, ws : Websocket) -> None:
-		if self._is_ws_already_subscribed(ws):
-			raise Exception(f"ERROR: Attempt to subscribe duplicate websocket {ws.get_websocket_id()}")
-		else:
-			self.ws_subscriptions.append(ws)
-
 	def _get_rest_session(self) -> aiohttp.ClientSession:
 		if self.rest_session is not None:
 			return self.rest_session
@@ -264,11 +263,6 @@ class BitpandaClient(object):
 				res[key] = str(value)
 
 		return res
-
-	async def close(self) -> None:
-		session = self._get_rest_session()
-		if session is not None:
-			await session.close()
 
 	async def _on_request_start(session, trace_config_ctx, params) -> None:
 		logger.debug(f"> Context: {trace_config_ctx}")

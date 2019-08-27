@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
 	name="bitpanda-aio",
-	version="0.0.1",
+	version="0.1.0",
 	author="nardew",
 	author_email="bitpanda.aio@gmail.com",
 	description="Bitpanda Global Exchange API asynchronous python client",

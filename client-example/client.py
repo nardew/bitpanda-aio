@@ -6,7 +6,7 @@ import os
 
 from bitpanda.BitpandaClient import BitpandaClient
 from bitpanda.Pair import Pair
-from bitpanda.websockets import CandlesticksSubscriptionParams
+from bitpanda.subscriptions import CandlesticksSubscriptionParams
 from bitpanda.enums import OrderSide, TimeUnit
 
 logger = logging.getLogger("bitpanda")
@@ -29,7 +29,7 @@ async def run():
 	api_key = os.environ['BITPANDA_API_KEY']
 
 	client = BitpandaClient(certificate_path, api_key)
-
+	'''
 	# REST api calls
 	print("REST API")
 	print("\nAccount balance:")
@@ -88,16 +88,19 @@ async def run():
 
 	print("\nTime:")
 	await client.get_time()
-
+	'''
 	# Websockets
 	print("\nWEBSOCKETS\n")
-	client.subscribe_prices_ws([Pair("BTC", "EUR")])
-	client.subscribe_order_book_ws([Pair("BTC", "EUR")], "50", callbacks = [order_book_update])
-	client.subscribe_account_ws()
-	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
-	client.subscribe_market_ticker_ws([Pair("BTC", "EUR")])
+	client.subscribe_prices([Pair("BTC", "EUR")])
+	client.subscribe_order_book([Pair("BTC", "EUR")], "50", callbacks = [order_book_update])
+	client.subscribe_account()
+	client.subscribe_candlesticks([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
+	client.subscribe_market_ticker([Pair("BTC", "EUR")])
 
-	await client.start_websockets()
+	await client.start_subscriptions()
+
+	await client.start_subscriptions([AccountSubscription()])
+	await client.start_subscriptions([OrderbookSubscription()])
 
 	await client.close()
 
