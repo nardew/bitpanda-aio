@@ -9,6 +9,7 @@
 ### Features
 - access to complete Bitpanda's REST API (account details, market data, order management, ...) and websockets (account feed, market data feed, orderbook feed, ...)
 - automatic connection management (reconnecting after remote termination, ...)
+- channels bundled in one or multiple websockets processed in parallel 
 - lean architecture setting ground for the future extensions and customizations
 - fully asynchronous design aiming for the best performance
 
@@ -121,7 +122,8 @@ import logging
 
 from bitpanda.BitpandaClient import BitpandaClient
 from bitpanda.Pair import Pair
-from bitpanda.websockets import CandlesticksSubscriptionParams
+from bitpanda.subscriptions import AccountSubscription, PricesSubscription, OrderbookSubscription, \
+	CandlesticksSubscription, MarketTickerSubscription, CandlesticksSubscriptionParams
 from bitpanda.enums import TimeUnit
 
 logger = logging.getLogger("bitpanda")
@@ -137,13 +139,22 @@ async def run():
 
 	client = BitpandaClient(certificate_path, api_key)
 
-	client.subscribe_prices_ws([Pair("BTC", "EUR")])
-	client.subscribe_order_book_ws([Pair("BTC", "EUR")], "50", callbacks = [order_book_update])
-	client.subscribe_account_ws()
-	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
-	client.subscribe_market_ticker_ws([Pair("BTC", "EUR")])
+	# Bundle several subscriptions into a single websocket
+	client.compose_subscriptions([
+		AccountSubscription(),
+		PricesSubscription([Pair("BTC", "EUR")]),
+		OrderbookSubscription([Pair("BTC", "EUR")], "50", callbacks = [order_book_update]),
+		CandlesticksSubscription([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)]),
+		MarketTickerSubscription([Pair("BTC", "EUR")])
+	])
 
-	await client.start_websockets()
+	# Bundle another subscriptions into a separate websocket
+	client.compose_subscriptions([
+		OrderbookSubscription([Pair("ETH", "EUR")], "50", callbacks = [order_book_update]),
+	])
+
+	# Execute all websockets asynchronously
+	await client.start_subscriptions()
 
 	await client.close()
 
@@ -152,7 +163,7 @@ if __name__ == "__main__":
 
 ```
 
-All examples are available in `client-example/client.py`.
+All examples can be found in `client-example/client.py` which is available in the GitHub repository.
 
 ### Support
 

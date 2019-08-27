@@ -6,7 +6,8 @@ import os
 
 from bitpanda.BitpandaClient import BitpandaClient
 from bitpanda.Pair import Pair
-from bitpanda.websockets import CandlesticksSubscriptionParams
+from bitpanda.subscriptions import AccountSubscription, PricesSubscription, OrderbookSubscription, \
+	CandlesticksSubscription, MarketTickerSubscription, CandlesticksSubscriptionParams
 from bitpanda.enums import OrderSide, TimeUnit
 
 logger = logging.getLogger("bitpanda")
@@ -32,6 +33,7 @@ async def run():
 
 	# REST api calls
 	print("REST API")
+	
 	print("\nAccount balance:")
 	await client.get_account_balances()
 
@@ -91,13 +93,23 @@ async def run():
 
 	# Websockets
 	print("\nWEBSOCKETS\n")
-	client.subscribe_prices_ws([Pair("BTC", "EUR")])
-	client.subscribe_order_book_ws([Pair("BTC", "EUR")], "50", callbacks = [order_book_update])
-	client.subscribe_account_ws()
-	client.subscribe_candlesticks_ws([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)])
-	client.subscribe_market_ticker_ws([Pair("BTC", "EUR")])
 
-	await client.start_websockets()
+	# Bundle several subscriptions into a single websocket
+	client.compose_subscriptions([
+		AccountSubscription(),
+		PricesSubscription([Pair("BTC", "EUR")]),
+		OrderbookSubscription([Pair("BTC", "EUR")], "50", callbacks = [order_book_update]),
+		CandlesticksSubscription([CandlesticksSubscriptionParams(Pair("BTC", "EUR"), TimeUnit.MINUTES, 1)]),
+		MarketTickerSubscription([Pair("BTC", "EUR")])
+	])
+
+	# Bundle another subscriptions into a separate websocket
+	client.compose_subscriptions([
+		OrderbookSubscription([Pair("ETH", "EUR")], "50", callbacks = [order_book_update]),
+	])
+
+	# Execute all websockets asynchronously
+	await client.start_subscriptions()
 
 	await client.close()
 
