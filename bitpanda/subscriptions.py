@@ -3,6 +3,7 @@ import json
 import logging
 import asyncio
 from abc import ABC, abstractmethod
+from typing import List, Callable, Any
 
 from bitpanda.Pair import Pair
 from bitpanda import enums
@@ -14,33 +15,34 @@ class Subscription(ABC):
 		self.callbacks = callbacks
 
 	@abstractmethod
-	def get_channel_name(self):
+	def get_channel_name(self) -> str:
 		pass
 
 	@abstractmethod
-	def get_channel_subscription_message(self):
+	def get_channel_subscription_message(self) -> dict:
 		pass
 
-	async def process_message(self, response):
+	async def process_message(self, response : dict) -> None:
 		await self.process_callbacks(response)
 
-	async def process_callbacks(self, response):
+	async def process_callbacks(self, response : dict) -> None:
 		if self.callbacks is not None:
 			await asyncio.gather(*[asyncio.create_task(cb(response)) for cb in self.callbacks])
 
 	@staticmethod
-	def _get_subscription_instrument_codes(pairs):
+	def _get_subscription_instrument_codes(pairs : List[Pair]) -> List[str]:
 		return [pair.base + "_" + pair.quote for pair in pairs]
 
 class SubscriptionMgr(object):
 	WEB_SOCKET_URI = "wss://streams.exchange.bitpanda.com"
 
-	def __init__(self, ssl_context = None):
+	def __init__(self, subscriptions : List[Subscription], api_key : str, ssl_context = None):
+		self.api_key = api_key
 		self.ssl_context = ssl_context
 
-		self.subscriptions = []
+		self.subscriptions = subscriptions
 
-	async def run(self):
+	async def run(self) -> None:
 		try:
 			# main loop ensuring proper reconnection after a graceful connection termination by the remote server
 			while True:
@@ -81,50 +83,35 @@ class SubscriptionMgr(object):
 			logger.error(f"Exception occurred. Websocket will be closed.")
 			raise
 
-	def _create_subscription_message(self):
+	def _create_subscription_message(self) -> dict:
 		return {
 			"type": "SUBSCRIBE",
 			"channels": [
-				subscription.get_channel_subscription_message() for subscription in self.subscriptions
+				dict(subscription.get_channel_subscription_message(), **{"api_token": self.api_key}) for subscription in self.subscriptions
 			]
 		}
 
-	def add_subscription(self, subscription : Subscription) -> None:
-		if self._is_channel_already_subscribed(subscription):
-			raise Exception(f"ERROR: Attempt to subscribe duplicate channel {subscription.get_channel_name()}")
-		else:
-			self.subscriptions.append(subscription)
-
-	def _is_channel_already_subscribed(self, new_subscription : Subscription) -> bool:
-		for subscription in self.subscriptions:
-			if subscription.get_channel_name() == new_subscription.get_channel_name():
-				return True
-
-		return False
-
-	async def process_message(self, response):
+	async def process_message(self, response : dict) -> None:
 		for subscription in self.subscriptions:
 			if subscription.get_channel_name() == response["channel_name"]:
 				await subscription.process_message(response)
 				break
 
 class AccountSubscription(Subscription):
-	def __init__(self, api_key, callbacks = None):
+	def __init__(self, callbacks : List[Callable[[dict], Any]] = None):
 		super().__init__(callbacks)
-
-		self.api_key = api_key
 
 	def get_channel_name(self):
 		return "ACCOUNT_HISTORY"
 
 	def get_channel_subscription_message(self):
+		# api_token property is added automatically by SocketMgr
 		return {
 			"name": self.get_channel_name(),
-			"api_token": self.api_key
 		}
 
 class PricesSubscription(Subscription):
-	def __init__(self, pairs, callbacks = None):
+	def __init__(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None):
 		super().__init__(callbacks)
 
 		self.pairs = pairs
@@ -139,7 +126,7 @@ class PricesSubscription(Subscription):
 		}
 
 class OrderbookSubscription(Subscription):
-	def __init__(self, pairs, depth, callbacks = None):
+	def __init__(self, pairs : List[Pair], depth : str, callbacks : List[Callable[[dict], Any]] = None):
 		super().__init__(callbacks)
 
 		self.pairs = pairs
@@ -162,7 +149,7 @@ class CandlesticksSubscriptionParams(object):
 		self.period = period
 
 class CandlesticksSubscription(Subscription):
-	def __init__(self, subscription_params, callbacks = None):
+	def __init__(self, subscription_params : List[CandlesticksSubscriptionParams], callbacks : List[Callable[[dict], Any]] = None):
 		super().__init__(callbacks)
 
 		self.subscription_params = subscription_params
@@ -183,7 +170,7 @@ class CandlesticksSubscription(Subscription):
 		}
 
 class MarketTickerSubscription(Subscription):
-	def __init__(self, pairs, callbacks = None):
+	def __init__(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None):
 		super().__init__(callbacks)
 
 		self.pairs = pairs

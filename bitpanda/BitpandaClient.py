@@ -22,14 +22,10 @@ class BitpandaClient(object):
 
 		self.rest_session = None
 
-
-
-		self.ws_subscriptions = []
-
 		self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 		self.ssl_context.load_verify_locations(certificate_path)
 
-		self.subscription_manager = SubscriptionMgr(self.ssl_context)
+		self.subscription_sets = []
 
 	async def get_currencies(self) -> dict:
 		return await self._create_get("currencies")
@@ -165,36 +161,26 @@ class BitpandaClient(object):
 	async def get_time(self) -> dict:
 		return await self._create_get("time")
 
-	def subscribe_prices(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self.subscription_manager.add_subscription(PricesSubscription(pairs, callbacks))
-
-	def subscribe_order_book(self, pairs : List[Pair], depth : str, callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self.subscription_manager.add_subscription(OrderbookSubscription(pairs, depth, callbacks))
-
-	def subscribe_account(self, callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self.subscription_manager.add_subscription(AccountSubscription(self.api_key, callbacks))
-
-	def subscribe_candlesticks(self, subscription_params : List[CandlesticksSubscriptionParams], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self.subscription_manager.add_subscription(CandlesticksSubscription(subscription_params, callbacks))
-
-	def subscribe_market_ticker(self, pairs : List[Pair], callbacks : List[Callable[[dict], Any]] = None) -> None:
-		self.subscription_manager.add_subscription(MarketTickerSubscription(pairs, callbacks))
+	def compose_subscriptions(self, subscriptions : List[Subscription]) -> None:
+		self.subscription_sets.append(subscriptions)
 
 	async def start_subscriptions(self) -> None:
-		await self.subscription_manager.run()
-		'''
-		if len(self.ws_subscriptions):
-			done, pending = await asyncio.wait([asyncio.create_task(ws_subscription.run()) for ws_subscription in self.ws_subscriptions], return_when = asyncio.FIRST_EXCEPTION)
+		if len(self.subscription_sets):
+			done, pending = await asyncio.wait(
+				[asyncio.create_task(SubscriptionMgr(subscriptions, self.api_key, self.ssl_context).run()) for subscriptions in self.subscription_sets],
+				return_when = asyncio.FIRST_EXCEPTION
+			)
 			for task in done:
 				try:
 					task.result()
 				except Exception as e:
-					logger.exception(f"Unrecoverable exception occurred while processing websockets: {e}")
+					logger.exception(f"Unrecoverable exception occurred while processing messages: {e}")
 					logger.info("All websockets scheduled for shutdown")
 					for task in pending:
 						if not task.cancelled():
 							task.cancel()
-		'''
+		else:
+			raise Exception("ERROR: There are no subscriptions to be started.")
 
 	async def close(self) -> None:
 		session = self._get_rest_session()
