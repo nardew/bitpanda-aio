@@ -1,5 +1,5 @@
 class Pair(object):
-	def __init__(self, base, quote):
+	def __init__(self, base : str, quote : str):
 		self.base = base
 		self.quote = quote
 

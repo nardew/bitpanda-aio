@@ -1,6 +1,6 @@
 # bitpanda-aio
 
-[![](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-374/)
+[![](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-365/) [![](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-374/)
 
 `bitpanda-aio` is a Python library providing access to [Bitpanda Global Exchange API](https://developers.bitpanda.com/exchange/). Library implements bitpanda's REST API as well as websockets.
 
@@ -20,7 +20,7 @@ pip install bitpanda-aio
 
 ### Prerequisites
 
-Due to dependencies and Python features used by the library please make sure you use Python 3.7.
+Due to dependencies and Python features used by the library please make sure you use Python `3.6` or `3.7`.
 
 Before starting using `bitpanda-aio`, it is necessary to take care of:
 1. downloading your Bitpanda API key from your Bitpanda Global Exchange account
@@ -163,7 +163,7 @@ if __name__ == "__main__":
 
 ```
 
-All examples can be found in `client-example/client.py` which is available in the GitHub repository.
+All examples can be found in `client-example/client.py` in the GitHub repository.
 
 ### Support
 
