@@ -10,9 +10,9 @@ from bitpanda.subscriptions import AccountSubscription, PricesSubscription, Orde
 	CandlesticksSubscription, MarketTickerSubscription, CandlesticksSubscriptionParams
 from bitpanda.enums import OrderSide, TimeUnit
 
-logger = logging.getLogger("bitpanda")
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
+LOG = logging.getLogger("bitpanda")
+LOG.setLevel(logging.DEBUG)
+LOG.addHandler(logging.StreamHandler())
 
 print(f"Available loggers: {[name for name in logging.root.manager.loggerDict]}\n")
 

@@ -4,14 +4,16 @@ import ssl
 import logging
 import datetime
 import pytz
+import json
 from typing import List, Callable, Any
 
 from bitpanda.Pair import Pair
 from bitpanda.subscriptions import Subscription, SubscriptionMgr, PricesSubscription, OrderbookSubscription, AccountSubscription, CandlesticksSubscription, \
 	MarketTickerSubscription, CandlesticksSubscriptionParams
 from bitpanda import enums
+from bitpanda.Timer import Timer
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 class BitpandaClient(object):
 	REST_API_URI = "https://api.exchange.bitpanda.com/public/v1/"
@@ -95,7 +97,7 @@ class BitpandaClient(object):
 	async def get_account_trading_volume(self) -> dict:
 		return await self._create_get("account/trading-volume", headers = self._get_header_api_key())
 
-	async def create_market_order(self, pair : Pair, side : enums.OrderSide, amount : str) -> dict:
+	async def create_market_order(self, pair : Pair, side : enums.OrderSide, amount : str, client_id : str = None) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,
@@ -103,9 +105,12 @@ class BitpandaClient(object):
 			"amount": amount
 		}
 
+		if client_id is not None:
+			data['client_id'] = client_id
+
 		return await self._create_post("account/orders", data = data, headers = self._get_header_api_key())
 
-	async def create_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str) -> dict:
+	async def create_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str, time_in_force : enums.TimeInForce = None, client_id : str = None) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,
@@ -114,9 +119,16 @@ class BitpandaClient(object):
 			"price": limit_price
 		}
 
+		if client_id is not None:
+			data['client_id'] = client_id
+
+		if time_in_force is not None:
+			data['time_in_force'] = time_in_force.value
+
 		return await self._create_post("account/orders", data = data, headers = self._get_header_api_key())
 
-	async def create_stop_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str, stop_price : str) -> dict:
+	async def create_stop_limit_order(self, pair : Pair, side : enums.OrderSide, amount : str, limit_price : str, stop_price : str,
+	                                  time_in_force : enums.TimeInForce = None, client_id : str = None) -> dict:
 		data = {
 			"instrument_code": str(pair),
 			"side": side.value,
@@ -125,6 +137,12 @@ class BitpandaClient(object):
 			"price": limit_price,
 			"trigger_price": stop_price
 		}
+
+		if client_id is not None:
+			data['client_id'] = client_id
+
+		if time_in_force is not None:
+			data['time_in_force'] = time_in_force.value
 
 		return await self._create_post("account/orders", data = data, headers = self._get_header_api_key())
 
@@ -174,8 +192,8 @@ class BitpandaClient(object):
 				try:
 					task.result()
 				except Exception as e:
-					logger.exception(f"Unrecoverable exception occurred while processing messages: {e}")
-					logger.info("All websockets scheduled for shutdown")
+					LOG.exception(f"Unrecoverable exception occurred while processing messages: {e}")
+					LOG.info("All websockets scheduled for shutdown")
 					for task in pending:
 						if not task.cancelled():
 							task.cancel()
@@ -197,26 +215,27 @@ class BitpandaClient(object):
 		return await self._create_rest_call(enums.RestCallType.DELETE, resource, None, params, headers)
 
 	async def _create_rest_call(self, rest_call_type : enums.RestCallType, resource : str, data : dict = None, params : dict = None, headers : dict = None) -> dict:
-		if rest_call_type == enums.RestCallType.GET:
-			rest_call = self._get_rest_session().get(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
-		elif rest_call_type == enums.RestCallType.POST:
-			rest_call = self._get_rest_session().post(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
-		elif rest_call_type == enums.RestCallType.DELETE:
-			rest_call = self._get_rest_session().delete(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
-		else:
-			raise Exception(f"Unsupported REST call type {rest_call_type}.")
+		with Timer('RestCall'):
+			if rest_call_type == enums.RestCallType.GET:
+				rest_call = self._get_rest_session().get(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
+			elif rest_call_type == enums.RestCallType.POST:
+				rest_call = self._get_rest_session().post(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
+			elif rest_call_type == enums.RestCallType.DELETE:
+				rest_call = self._get_rest_session().delete(BitpandaClient.REST_API_URI + resource, json = data, params = params, headers = headers, ssl = self.ssl_context)
+			else:
+				raise Exception(f"Unsupported REST call type {rest_call_type}.")
 
-		logger.debug(f"> resource [{resource}], params [{params}], headers [{headers}], data [{data}]")
-		async with rest_call as response:
-			status_code = response.status
-			response_text = await response.text()
+			LOG.debug(f"> resource [{resource}], params [{params}], headers [{headers}], data [{data}]")
+			async with rest_call as response:
+				status_code = response.status
+				response_text = await response.text()
 
-			logger.debug(f"<: status [{status_code}], response [{response_text}]")
+				LOG.debug(f"<: status [{status_code}], response [{response_text}]")
 
-			return {
-				"status_code": status_code,
-				"response": response_text
-			}
+				return {
+					"status_code": status_code,
+					"response": json.loads(response_text)
+				}
 
 	def _get_rest_session(self) -> aiohttp.ClientSession:
 		if self.rest_session is not None:
@@ -251,9 +270,9 @@ class BitpandaClient(object):
 		return res
 
 	async def _on_request_start(session, trace_config_ctx, params) -> None:
-		logger.debug(f"> Context: {trace_config_ctx}")
-		logger.debug(f"> Params: {params}")
+		LOG.debug(f"> Context: {trace_config_ctx}")
+		LOG.debug(f"> Params: {params}")
 
 	async def _on_request_end(session, trace_config_ctx, params) -> None:
-		logger.debug(f"< Context: {trace_config_ctx}")
-		logger.debug(f"< Params: {params}")
+		LOG.debug(f"< Context: {trace_config_ctx}")
+		LOG.debug(f"< Params: {params}")

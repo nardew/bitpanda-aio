@@ -8,7 +8,7 @@ from typing import List, Callable, Any
 from bitpanda.Pair import Pair
 from bitpanda import enums
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 class Subscription(ABC):
 	def __init__(self, callbacks = None):
@@ -46,20 +46,20 @@ class SubscriptionMgr(object):
 		try:
 			# main loop ensuring proper reconnection after a graceful connection termination by the remote server
 			while True:
-				logger.debug(f"Initiating websocket connection.")
+				LOG.debug(f"Initiating websocket connection.")
 				async with websockets.connect(SubscriptionMgr.WEB_SOCKET_URI, ssl = self.ssl_context) as websocket:
 					subscription_message = self._create_subscription_message()
-					logger.debug(f"> {subscription_message}")
+					LOG.debug(f"> {subscription_message}")
 					await websocket.send(json.dumps(subscription_message))
 
 					# start processing incoming messages
 					while True:
 						response = json.loads(await websocket.recv())
-						logger.debug(f"< {response}")
+						LOG.debug(f"< {response}")
 
 						# subscription positive response
 						if response['type'] == "SUBSCRIPTIONS":
-							logger.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
+							LOG.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
 
 						# subscription negative response
 						elif response['type'] == "ERROR":
@@ -67,7 +67,7 @@ class SubscriptionMgr(object):
 
 						# remote termination with an opportunity to reconnect
 						elif response["type"] == "CONNECTION_CLOSING":
-							logger.warning(f"Server is performing connection termination with an opportunity to reconnect.")
+							LOG.warning(f"Server is performing connection termination with an opportunity to reconnect.")
 							break
 
 						# heartbeat message
@@ -78,9 +78,9 @@ class SubscriptionMgr(object):
 						else:
 							await self.process_message(response)
 		except asyncio.CancelledError:
-			logger.warning(f"Websocket requested to be shutdown.")
+			LOG.warning(f"Websocket requested to be shutdown.")
 		except Exception:
-			logger.error(f"Exception occurred. Websocket will be closed.")
+			LOG.error(f"Exception occurred. Websocket will be closed.")
 			raise
 
 	def _create_subscription_message(self) -> dict:
