@@ -6,6 +6,8 @@
 
 `bitpanda-aio` is designed as an asynchronous library utilizing modern features of Python and of supporting asynchronous libraries (mainly [async websockets](https://websockets.readthedocs.io/en/stable/) and [aiohttp](https://aiohttp.readthedocs.io/en/stable/)).
 
+For changes see [CHANGELOG](CHANGELOG.md).
+
 ### Features
 - access to complete Bitpanda's REST API (account details, market data, order management, ...) and websockets (account feed, market data feed, orderbook feed, ...)
 - automatic connection management (reconnecting after remote termination, ...)
