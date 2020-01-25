@@ -225,16 +225,19 @@ class BitpandaClient(object):
 			else:
 				raise Exception(f"Unsupported REST call type {rest_call_type}.")
 
-			LOG.debug(f"> resource [{resource}], params [{params}], headers [{headers}], data [{data}]")
+			LOG.debug(f"> rest type [{rest_call_type.name}], resource [{resource}], params [{params}], headers [{headers}], data [{data}]")
 			async with rest_call as response:
 				status_code = response.status
-				response_text = await response.text()
+				response_body = await response.text()
 
-				LOG.debug(f"<: status [{status_code}], response [{response_text}]")
+				LOG.debug(f"<: status [{status_code}], response [{response_body}]")
+
+				if len(response_body) > 0:
+					response_body = json.loads(response_body)
 
 				return {
 					"status_code": status_code,
-					"response": json.loads(response_text)
+					"response": response_body
 				}
 
 	def _get_rest_session(self) -> aiohttp.ClientSession:
