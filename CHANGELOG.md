@@ -6,6 +6,13 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Pending release]
 
+## [1.0.2] - 2020-02-04
+
+### Changed
+
+- Bugfix: Fix 'from' and 'to' timestamps in `get_account_orders` and `get_account_trades` REST calls
+- Bugfix: Handle subscription error due to invalid credentials properly
+
 ## [1.0.1] - 2020-02-01
 
 ### Changed
@@ -24,6 +31,7 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 - __Important!!!__ REST response body is not returned as a string anymore but as a dictionary instead. If you did `json.loads(response['response'])` before, now use only `response['response']`.
 
-[Pending release]: https://github.com/nardew/bitpanda-aio/compare/1.0.1...HEAD
-[1.0.0]: https://github.com/nardew/bitpanda-aio/compare/0.1.0...1.0.0
+[Pending release]: https://github.com/nardew/bitpanda-aio/compare/1.0.2...HEAD
+[1.0.2]: https://github.com/nardew/bitpanda-aio/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/nardew/bitpanda-aio/compare/1.0.0...1.0.1
+[1.0.0]: https://github.com/nardew/bitpanda-aio/compare/0.1.0...1.0.0

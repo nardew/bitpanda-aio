@@ -57,13 +57,13 @@ class SubscriptionMgr(object):
 						response = json.loads(await websocket.recv())
 						LOG.debug(f"< {response}")
 
-						# subscription positive response
-						if response['type'] == "SUBSCRIPTIONS":
-							LOG.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
-
 						# subscription negative response
-						elif response['type'] == "ERROR":
+						if "error" in response or response['type'] == "ERROR":
 							raise Exception(f"Subscription error. Request [{json.dumps(subscription_message)}] Response [{json.dumps(response)}]")
+
+						# subscription positive response
+						elif response['type'] == "SUBSCRIPTIONS":
+							LOG.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
 
 						# remote termination with an opportunity to reconnect
 						elif response["type"] == "CONNECTION_CLOSING":

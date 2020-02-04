@@ -42,8 +42,6 @@ class BitpandaClient(object):
 	                             pair : Pair = None, with_cancelled_and_rejected : str = None, with_just_filled_inactive : str = None,
 	                             max_page_size : str = None, cursor : str = None) -> dict:
 		params = BitpandaClient._clean_request_params({
-			"from": from_timestamp,
-			"to": to_timestamp,
 			"instrument_code": pair,
 			"with_cancelled_and_rejected": with_cancelled_and_rejected,
 			"with_just_filled_inactive": with_just_filled_inactive,
@@ -51,15 +49,11 @@ class BitpandaClient(object):
 			"cursor": cursor,
 		})
 
-		try:
-			params["from"] = params["from"].astimezone(pytz.utc).isoformat()
-		except KeyError:
-			pass
+		if from_timestamp is not None:
+			params["from"] = from_timestamp.astimezone(pytz.utc).isoformat()
 
-		try:
-			params["to"] = params["to"].astimezone(pytz.utc).isoformat()
-		except KeyError:
-			pass
+		if to_timestamp is not None:
+			params["to"] = to_timestamp.astimezone(pytz.utc).isoformat()
 
 		return await self._create_get("account/orders", params = params, headers = self._get_header_api_key())
 
@@ -72,22 +66,16 @@ class BitpandaClient(object):
 	async def get_account_trades(self, from_timestamp : datetime.datetime = None, to_timestamp : datetime.datetime = None,
 	                             pair : Pair = None, max_page_size : str = None, cursor : str = None) -> dict:
 		params = BitpandaClient._clean_request_params({
-			"from": from_timestamp,
-			"to": to_timestamp,
 			"instrument_code": pair,
 			"max_page_size": max_page_size,
 			"cursor": cursor,
 		})
 
-		try:
-			params["from"] = params["from"].astimezone(pytz.utc).isoformat()
-		except KeyError:
-			pass
+		if from_timestamp is not None:
+			params["from"] = from_timestamp.astimezone(pytz.utc).isoformat()
 
-		try:
-			params["to"] = params["to"].astimezone(pytz.utc).isoformat()
-		except KeyError:
-			pass
+		if to_timestamp is not None:
+			params["to"] = to_timestamp.astimezone(pytz.utc).isoformat()
 
 		return await self._create_get("account/trades", params = params, headers = self._get_header_api_key())
 
