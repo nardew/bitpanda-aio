@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
 	long_description = fh.read()
 
+with open("requirements.txt", "r") as fh:
+	requirements = fh.readlines()
+requirements = [line.strip() for line in requirements]
+
 setuptools.setup(
 	name="bitpanda-aio",
 	version="1.0.2",
@@ -26,10 +30,6 @@ setuptools.setup(
 		"Topic :: Software Development :: Libraries :: Python Modules",
 		"Typing :: Typed",
 	],
-	install_requires=[
-		'aiohttp==3.6.2',
-		'websockets==8.1',
-		'pytz==2019.3'
-	],
+	install_requires=requirements,
 	python_requires='>=3.6',
 )

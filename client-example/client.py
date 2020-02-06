@@ -27,12 +27,16 @@ async def run():
 
 	# to retrieve your API key go to your bitpanda global exchange account and store it in BITPANDA_API_KEY environment
 	# variable
-	api_key = os.environ['BITPANDA_API_KEY']
+	api_key = os.environ['BITPANDAAPIKEY']
 
 	client = BitpandaClient(certificate_path, api_key)
 
 	# REST api calls
 	print("REST API")
+
+	print("\nTime:")
+	response = await client.get_time()
+	print(f"Headers: {response['headers']}")
 	
 	print("\nAccount balance:")
 	await client.get_account_balances()
@@ -87,9 +91,6 @@ async def run():
 
 	print("\nOrder book:")
 	await client.get_order_book(Pair("BTC", "EUR"))
-
-	print("\nTime:")
-	await client.get_time()
 
 	# Websockets
 	print("\nWEBSOCKETS\n")

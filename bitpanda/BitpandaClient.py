@@ -225,6 +225,7 @@ class BitpandaClient(object):
 
 				return {
 					"status_code": status_code,
+					"headers": response.headers,
 					"response": response_body
 				}
 
