@@ -40,11 +40,12 @@ class BitpandaClient(object):
 
 	async def get_account_orders(self, from_timestamp : datetime.datetime = None, to_timestamp : datetime.datetime = None,
 	                             pair : Pair = None, with_cancelled_and_rejected : str = None, with_just_filled_inactive : str = None,
-	                             max_page_size : str = None, cursor : str = None) -> dict:
+	                             with_just_orders : str = None, max_page_size : str = None, cursor : str = None) -> dict:
 		params = BitpandaClient._clean_request_params({
 			"instrument_code": pair,
 			"with_cancelled_and_rejected": with_cancelled_and_rejected,
 			"with_just_filled_inactive": with_just_filled_inactive,
+			"with_just_orders": with_just_orders,
 			"max_page_size": max_page_size,
 			"cursor": cursor,
 		})

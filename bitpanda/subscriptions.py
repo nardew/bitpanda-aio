@@ -35,6 +35,7 @@ class Subscription(ABC):
 
 class SubscriptionMgr(object):
 	WEB_SOCKET_URI = "wss://streams.exchange.bitpanda.com"
+	MAX_MESSAGE_SIZE = 3 * 1024 * 1024 # 3MB
 
 	def __init__(self, subscriptions : List[Subscription], api_key : str, ssl_context = None):
 		self.api_key = api_key
@@ -47,7 +48,7 @@ class SubscriptionMgr(object):
 			# main loop ensuring proper reconnection after a graceful connection termination by the remote server
 			while True:
 				LOG.debug(f"Initiating websocket connection.")
-				async with websockets.connect(SubscriptionMgr.WEB_SOCKET_URI, ssl = self.ssl_context) as websocket:
+				async with websockets.connect(SubscriptionMgr.WEB_SOCKET_URI, ssl = self.ssl_context, max_size = SubscriptionMgr.MAX_MESSAGE_SIZE) as websocket:
 					subscription_message = self._create_subscription_message()
 					LOG.debug(f"> {subscription_message}")
 					await websocket.send(json.dumps(subscription_message))

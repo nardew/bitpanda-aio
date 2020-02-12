@@ -18,7 +18,7 @@ setuptools.setup(
 	url="https://github.com/nardew/bitpanda-aio",
 	packages=setuptools.find_packages(),
 	classifiers=[
-		"Development Status :: 4 - Beta",
+		"Development Status :: 5 - Production/Stable",
 		"Framework :: AsyncIO",
 		"Intended Audience :: Developers",
 		"Programming Language :: Python :: 3",
