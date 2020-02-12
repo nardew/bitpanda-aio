@@ -6,6 +6,17 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Pending release]
 
+## [1.1.0] - 2020-02-12
+
+### Added
+
+- `get_account_orders` supports `with_just_orders` attribute
+- REST response dictionary provides received headers
+
+### Changed
+
+- Max websocket message size increased to 3MB to support potentially huge messages, e.g. account snapshot
+
 ## [1.0.2] - 2020-02-04
 
 ### Changed
@@ -31,7 +42,8 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 - __Important!!!__ REST response body is not returned as a string anymore but as a dictionary instead. If you did `json.loads(response['response'])` before, now use only `response['response']`.
 
-[Pending release]: https://github.com/nardew/bitpanda-aio/compare/1.0.2...HEAD
+[Pending release]: https://github.com/nardew/bitpanda-aio/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/nardew/bitpanda-aio/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/nardew/bitpanda-aio/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/nardew/bitpanda-aio/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/nardew/bitpanda-aio/compare/0.1.0...1.0.0
