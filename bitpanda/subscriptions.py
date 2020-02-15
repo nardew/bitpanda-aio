@@ -35,6 +35,7 @@ class Subscription(ABC):
 
 class SubscriptionMgr(object):
 	WEB_SOCKET_URI = "wss://streams.exchange.bitpanda.com"
+	CONNECTION_REINITIALIZATION_AFTER_ERROR = True
 	MAX_MESSAGE_SIZE = 3 * 1024 * 1024 # 3MB
 
 	def __init__(self, subscriptions : List[Subscription], api_key : str, ssl_context = None):
@@ -48,36 +49,42 @@ class SubscriptionMgr(object):
 			# main loop ensuring proper reconnection after a graceful connection termination by the remote server
 			while True:
 				LOG.debug(f"Initiating websocket connection.")
-				async with websockets.connect(SubscriptionMgr.WEB_SOCKET_URI, ssl = self.ssl_context, max_size = SubscriptionMgr.MAX_MESSAGE_SIZE) as websocket:
-					subscription_message = self._create_subscription_message()
-					LOG.debug(f"> {subscription_message}")
-					await websocket.send(json.dumps(subscription_message))
+				try:
+					async with websockets.connect(SubscriptionMgr.WEB_SOCKET_URI, ssl = self.ssl_context, max_size = SubscriptionMgr.MAX_MESSAGE_SIZE) as websocket:
+						subscription_message = self._create_subscription_message()
+						LOG.debug(f"> {subscription_message}")
+						await websocket.send(json.dumps(subscription_message))
 
-					# start processing incoming messages
-					while True:
-						response = json.loads(await websocket.recv())
-						LOG.debug(f"< {response}")
+						# start processing incoming messages
+						while True:
+							response = json.loads(await websocket.recv())
+							LOG.debug(f"< {response}")
 
-						# subscription negative response
-						if "error" in response or response['type'] == "ERROR":
-							raise Exception(f"Subscription error. Request [{json.dumps(subscription_message)}] Response [{json.dumps(response)}]")
+							# subscription negative response
+							if "error" in response or response['type'] == "ERROR":
+								raise Exception(f"Subscription error. Request [{json.dumps(subscription_message)}] Response [{json.dumps(response)}]")
 
-						# subscription positive response
-						elif response['type'] == "SUBSCRIPTIONS":
-							LOG.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
+							# subscription positive response
+							elif response['type'] == "SUBSCRIPTIONS":
+								LOG.info(f"Subscription confirmed for channels [" + ",".join([channel["name"] for channel in response["channels"]]) + "]")
 
-						# remote termination with an opportunity to reconnect
-						elif response["type"] == "CONNECTION_CLOSING":
-							LOG.warning(f"Server is performing connection termination with an opportunity to reconnect.")
-							break
+							# remote termination with an opportunity to reconnect
+							elif response["type"] == "CONNECTION_CLOSING":
+								LOG.warning(f"Server is performing connection termination with an opportunity to reconnect.")
+								break
 
-						# heartbeat message
-						elif response["type"] == "HEARTBEAT":
-							pass
+							# heartbeat message
+							elif response["type"] == "HEARTBEAT":
+								pass
 
-						# regular message
-						else:
-							await self.process_message(response)
+							# regular message
+							else:
+								await self.process_message(response)
+				except websockets.ConnectionClosedError as e:
+					if SubscriptionMgr.CONNECTION_REINITIALIZATION_AFTER_ERROR:
+						LOG.exception(f"ERROR: Connection closed with reason: {e}. Connection will be reinitialized.")
+					else:
+						raise
 		except asyncio.CancelledError:
 			LOG.warning(f"Websocket requested to be shutdown.")
 		except Exception:
