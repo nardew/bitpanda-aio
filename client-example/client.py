@@ -22,14 +22,11 @@ async def order_book_update(response : dict) -> None:
 async def run():
 	print("STARTING BITPANDA CLIENT\n")
 
-	# to generate a certificate use 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out certificate.pem'
-	certificate_path = pathlib.Path(__file__).with_name("certificate.pem")
-
 	# to retrieve your API key go to your bitpanda global exchange account and store it in BITPANDA_API_KEY environment
 	# variable
 	api_key = os.environ['BITPANDAAPIKEY']
 
-	client = BitpandaClient(certificate_path, api_key)
+	client = BitpandaClient(api_key)
 
 	# REST api calls
 	print("REST API")
