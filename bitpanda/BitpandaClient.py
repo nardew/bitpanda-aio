@@ -18,13 +18,16 @@ LOG = logging.getLogger(__name__)
 class BitpandaClient(object):
 	REST_API_URI = "https://api.exchange.bitpanda.com/public/v1/"
 
-	def __init__(self, api_key : str = None, api_trace_log : bool = False) -> None:
+	def __init__(self, api_key : str = None, api_trace_log : bool = False, ssl_context : ssl.SSLContext = None) -> None:
 		self.api_key = api_key
 		self.api_trace_log = api_trace_log
 
 		self.rest_session = None
 
-		self.ssl_context = ssl.create_default_context()
+		if ssl_context is not None:
+			self.ssl_context = ssl_context
+		else:
+			self.context = ssl.create_default_context()
 
 		self.subscription_sets = []
 
