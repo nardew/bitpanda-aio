@@ -27,7 +27,7 @@ class BitpandaClient(object):
 		if ssl_context is not None:
 			self.ssl_context = ssl_context
 		else:
-			self.context = ssl.create_default_context()
+			self.ssl_context = ssl.create_default_context()
 
 		self.subscription_sets = []
 

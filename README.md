@@ -24,18 +24,12 @@ pip install bitpanda-aio
 
 Due to dependencies and Python features used by the library please make sure you use Python `3.6` or `3.7`.
 
-Before starting using `bitpanda-aio`, it is necessary to take care of:
-1. downloading your Bitpanda API key from your Bitpanda Global Exchange account
-1. generating your certificate that will be used to secure SSL connections. Certificate `certificate.pem` can be generated easily by
-```bash
-openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out certificate.pem
-```
+Before starting using `bitpanda-aio`, it is necessary to take care of downloading your Bitpanda API key from your Bitpanda Global Exchange account
 
 ### Examples
 #### REST API
 ```python
 import asyncio
-import pathlib
 import logging
 import datetime
 
@@ -48,10 +42,9 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
 async def run():
-	certificate_path = pathlib.Path(__file__).with_name("certificate.pem")
 	api_key = "<YOUR_API_KEY>"
 
-	client = BitpandaClient(certificate_path, api_key)
+	client = BitpandaClient(api_key)
 
 	print("Account balance:")
 	await client.get_account_balances()
@@ -119,7 +112,6 @@ if __name__ == "__main__":
 #### WEBSOCKETS
 ```python
 import asyncio
-import pathlib
 import logging
 
 from bitpanda.BitpandaClient import BitpandaClient
@@ -136,10 +128,9 @@ async def order_book_update(response : dict) -> None:
 	print(f"Callback {order_book_update.__name__}: [{response}]")
 
 async def run():
-	certificate_path = pathlib.Path(__file__).with_name("certificate.pem")
 	api_key = "<YOUR_API_KEY>"
 
-	client = BitpandaClient(certificate_path, api_key)
+	client = BitpandaClient(api_key)
 
 	# Bundle several subscriptions into a single websocket
 	client.compose_subscriptions([

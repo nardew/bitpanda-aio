@@ -17,12 +17,12 @@ LOG.addHandler(logging.StreamHandler())
 print(f"Available loggers: {[name for name in logging.root.manager.loggerDict]}\n")
 
 async def order_book_update(response : dict) -> None:
-	print(f"Callback {order_book_update.__name__}: [{response}]")
+	print(f"Callback order_book_update: [{response}]")
 
 async def run():
 	print("STARTING BITPANDA CLIENT\n")
 
-	# to retrieve your API key go to your bitpanda global exchange account and store it in BITPANDA_API_KEY environment
+	# to retrieve your API key go to your bitpanda global exchange account and store it in BITPANDAAPIKEY environment
 	# variable
 	api_key = os.environ['BITPANDAAPIKEY']
 

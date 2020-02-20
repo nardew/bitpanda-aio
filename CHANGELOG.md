@@ -6,6 +6,12 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Pending release]
 
+## [2.0.0] - 2020-02-20
+
+### Changed
+
+- Server hostname and certificate verification enabled (thanks @pyranja)
+
 ## [1.1.0] - 2020-02-12
 
 ### Added
@@ -42,7 +48,8 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 - __Important!!!__ REST response body is not returned as a string anymore but as a dictionary instead. If you did `json.loads(response['response'])` before, now use only `response['response']`.
 
-[Pending release]: https://github.com/nardew/bitpanda-aio/compare/1.1.0...HEAD
+[Pending release]: https://github.com/nardew/bitpanda-aio/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/nardew/bitpanda-aio/compare/1.1.0...2.0.0
 [1.1.0]: https://github.com/nardew/bitpanda-aio/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/nardew/bitpanda-aio/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/nardew/bitpanda-aio/compare/1.0.0...1.0.1

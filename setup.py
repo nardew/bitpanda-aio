@@ -9,7 +9,7 @@ requirements = [line.strip() for line in requirements]
 
 setuptools.setup(
 	name="bitpanda-aio",
-	version="1.1.0",
+	version="2.0.0",
 	author="nardew",
 	author_email="bitpanda.aio@gmail.com",
 	description="Bitpanda Global Exchange API asynchronous python client",
