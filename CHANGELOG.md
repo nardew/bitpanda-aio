@@ -8,6 +8,10 @@ The project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [2.0.0] - 2020-02-20
 
+### Added
+
+- When websocket connection is closed by the remote server, client performs automatic reconnection
+
 ### Changed
 
 - Server hostname and certificate verification enabled (thanks @pyranja)
