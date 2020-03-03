@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-365/) [![](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-374/)
 
-`bitpanda-aio` is a Python library providing access to [Bitpanda Global Exchange API](https://developers.bitpanda.com/exchange/). Library implements bitpanda's REST API as well as websockets.
+`bitpanda-aio` is a Python library providing access to [Bitpanda Pro API](https://developers.bitpanda.com/exchange/) (former Bitpanda Global Exchange). Library implements bitpanda's REST API as well as websockets.
 
 `bitpanda-aio` is designed as an asynchronous library utilizing modern features of Python and of supporting asynchronous libraries (mainly [async websockets](https://websockets.readthedocs.io/en/stable/) and [aiohttp](https://aiohttp.readthedocs.io/en/stable/)).
 
@@ -24,7 +24,7 @@ pip install bitpanda-aio
 
 Due to dependencies and Python features used by the library please make sure you use Python `3.6` or `3.7`.
 
-Before starting using `bitpanda-aio`, it is necessary to take care of downloading your Bitpanda API key from your Bitpanda Global Exchange account
+Before starting using `bitpanda-aio`, it is necessary to take care of downloading your Bitpanda API key from your Bitpanda Pro account.
 
 ### Examples
 #### REST API
@@ -178,4 +178,4 @@ If you feel you want to get in touch, then please
 
 ### Affiliation
 
-In case you are interested in an automated trading bot that will utilize `bitpanda-aio` in the near future, then feel free to visit my other project [creten](https://github.com/nardew/creten).
+In case you are interested in asynchronous clients for other exchanges, pay a visit to my other libraries [binance-aio](https://github.com/nardew/binance-aio) or [bitforex-aio](https://github.com/nardew/bitforex-aio). In case you are interested in an automated trading bot, check out [creten](https://github.com/nardew/creten).
