@@ -1,6 +1,6 @@
-# bitpanda-aio 2.0.1
+# bitpanda-aio 2.0.2
 
-**Announcement:**`bitpanda-aio` has been replaced by a new library [`cryptolib-aio`](https://github.com/nardew/cryptolib-aio). `cryptolib-aio` offers the very same functionality as `bitpanda-aio` but on top it provides access to multiple cryptoexchanges and other (mostly technical) new features. You can keep using `bitpanda-aio` but please note no new features/bugfixes will be implemented. We recommend to migrate to `cryptolib-aio`.
+**Announcement:**`bitpanda-aio` has been replaced by a new library [`cryptoxlib-aio`](https://github.com/nardew/cryptolib-aio). `cryptoxlib-aio` offers the very same functionality as `bitpanda-aio` but on top it provides access to multiple cryptoexchanges and other (mostly technical) new features. You can keep using `bitpanda-aio` but please note no new features/bugfixes will be implemented. We recommend to migrate to `cryptoxlib-aio`.
 
 ----
 
