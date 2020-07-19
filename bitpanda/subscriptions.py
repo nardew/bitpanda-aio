@@ -8,6 +8,8 @@ from typing import List, Callable, Any
 from bitpanda.Pair import Pair
 from bitpanda import enums
 
+import threading
+
 LOG = logging.getLogger(__name__)
 
 class Subscription(ABC):
@@ -23,11 +25,11 @@ class Subscription(ABC):
 		pass
 
 	async def process_message(self, response : dict) -> None:
-		await self.process_callbacks(response)
+		return await self.process_callbacks(response)
 
 	async def process_callbacks(self, response : dict) -> None:
 		if self.callbacks is not None:
-			await asyncio.gather(*[asyncio.create_task(cb(response)) for cb in self.callbacks])
+			return await asyncio.gather(*[asyncio.create_task(cb(response)) for cb in self.callbacks])
 
 	@staticmethod
 	def _get_subscription_instrument_codes(pairs : List[Pair]) -> List[str]:
@@ -37,6 +39,9 @@ class SubscriptionMgr(object):
 	WEB_SOCKET_URI = "wss://streams.exchange.bitpanda.com"
 	CONNECTION_REINITIALIZATION_AFTER_ERROR = True
 	MAX_MESSAGE_SIZE = 3 * 1024 * 1024 # 3MB
+
+	subscriptionResultAvailable = threading.Event()
+	subscriptionResult = None
 
 	def __init__(self, subscriptions : List[Subscription], api_key : str, ssl_context = None):
 		self.api_key = api_key
@@ -58,7 +63,7 @@ class SubscriptionMgr(object):
 						# start processing incoming messages
 						while True:
 							response = json.loads(await websocket.recv())
-							LOG.debug(f"< {response}")
+							# LOG.debug(f"< {response}")
 
 							# subscription negative response
 							if "error" in response or response['type'] == "ERROR":
@@ -79,7 +84,12 @@ class SubscriptionMgr(object):
 
 							# regular message
 							else:
+								SubscriptionMgr.subscriptionResult = response
+								SubscriptionMgr.subscriptionResultAvailable.set()
+
 								await self.process_message(response)
+
+
 				except websockets.ConnectionClosedError as e:
 					if SubscriptionMgr.CONNECTION_REINITIALIZATION_AFTER_ERROR:
 						LOG.exception(f"ERROR: Connection closed with reason: {e}. Connection will be reinitialized.")
@@ -102,7 +112,7 @@ class SubscriptionMgr(object):
 	async def process_message(self, response : dict) -> None:
 		for subscription in self.subscriptions:
 			if subscription.get_channel_name() == response["channel_name"]:
-				await subscription.process_message(response)
+				return await subscription.process_message(response)
 				break
 
 class AccountSubscription(Subscription):
