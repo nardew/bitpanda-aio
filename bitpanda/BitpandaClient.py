@@ -5,6 +5,7 @@ import logging
 import datetime
 import pytz
 import json
+import sys
 from typing import List, Callable, Any
 
 from bitpanda.Pair import Pair
@@ -147,13 +148,26 @@ class BitpandaClient(object):
 	async def delete_account_order(self, order_id : str) -> dict:
 		return await self._create_delete("account/orders/" + order_id, headers=self._get_header_api_key())
 
-	async def get_candlesticks(self, pair : Pair, unit : enums.TimeUnit, period : str, from_timestamp : datetime.datetime, to_timestamp : datetime.datetime) -> dict:
+	async def get_candlesticks(self, pair : Pair, unit : enums.TimeUnit, period : str, from_timestamp, to_timestamp) -> dict:
+		# params = {
+		# 	"unit": unit.value,
+		# 	"period": period,
+		# 	"from": from_timestamp.astimezone(pytz.utc).isoformat(),
+		# 	"to": to_timestamp.astimezone(pytz.utc).isoformat(),
+		# }
+
+		if type(from_timestamp) == datetime.datetime:
+			from_timestamp = from_timestamp.astimezone(pytz.utc).isoformat()
+		if type(to_timestamp) == datetime.datetime:
+			to_timestamp = to_timestamp.astimezone(pytz.utc).isoformat()
+
 		params = {
 			"unit": unit.value,
 			"period": period,
-			"from": from_timestamp.astimezone(pytz.utc).isoformat(),
-			"to": to_timestamp.astimezone(pytz.utc).isoformat(),
+			"from": from_timestamp,
+			"to": to_timestamp,
 		}
+
 
 		return await self._create_get("candlesticks/" + str(pair), params = params)
 
@@ -175,10 +189,17 @@ class BitpandaClient(object):
 
 	async def start_subscriptions(self) -> None:
 		if len(self.subscription_sets):
-			done, pending = await asyncio.wait(
-				[asyncio.create_task(SubscriptionMgr(subscriptions, self.api_key, self.ssl_context).run()) for subscriptions in self.subscription_sets],
-				return_when = asyncio.FIRST_EXCEPTION
-			)
+			if sys.version_info.major == 3 and sys.version_info.minor >= 7:
+				done, pending = await asyncio.wait(
+					[asyncio.create_task(SubscriptionMgr(subscriptions, self.api_key, self.ssl_context).run()) for subscriptions in self.subscription_sets],
+					return_when = asyncio.FIRST_EXCEPTION
+				)
+			else:
+				loop = asyncio.get_event_loop()
+				done, pending = await asyncio.wait(
+					[loop.create_task(SubscriptionMgr(subscriptions, self.api_key, self.ssl_context).run()) for subscriptions in self.subscription_sets],
+					return_when = asyncio.FIRST_EXCEPTION
+				)
 			for task in done:
 				try:
 					task.result()
